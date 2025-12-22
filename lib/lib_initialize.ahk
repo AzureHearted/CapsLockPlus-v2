@@ -1,6 +1,6 @@
 #Requires AutoHotkey v2.0
 
-;! 在系统temp文件夹下创建依赖目录，并释放依赖文件
+; ! 在系统temp文件夹下创建依赖目录，并释放依赖文件
 DirCreate(A_Temp '\CapsLockPlus v2')
 try {
     FileInstall('lib/WebView2/32bit/WebView2Loader.dll', A_Temp '\CapsLockPlus v2\WebView2Loader_32bit.dll', 1)
