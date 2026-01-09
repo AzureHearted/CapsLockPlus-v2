@@ -20,10 +20,10 @@ StartAlone() {
 	Console.Debug("模式：单独启动")
 
 	if (SysVer.Major >= 10) {
-		;! 忽略DPI缩放(必须在创建GUI之前调用)
+		; ? 忽略DPI缩放(必须在创建GUI之前调用)
 		DllCall("User32\SetThreadDpiAwarenessContext", "UInt", -5)
 	} else {
-		;! 忽略DPI缩放(必须在创建GUI之前调用)
+		; ? 忽略DPI缩放(必须在创建GUI之前调用)
 		DllCall("User32\SetThreadDpiAwarenessContext", "UInt", -1)
 	}
 
@@ -54,7 +54,7 @@ RuleTypeReverseMap := Map(
 	"Extension", "扩展名"
 )
 
-;! 带GUI批量重命名
+; 带GUI批量重命名
 class BatchReName {
 	/** @type {Gui} */
 	gui := ""
@@ -90,7 +90,7 @@ class BatchReName {
 		this.gui.MarginX := this.gapX
 		this.gui.MarginY := this.gapY
 
-		;* 顶部按钮
+		; f 顶部按钮
 		; 新增规则按钮
 		this.btnAddRule := this.gui.AddButton("r0.75 vAddRule Section", "新增")
 		this.btnAddRule.OnEvent("Click", (*) => this.ShowRuleEdit("create", true))
@@ -122,14 +122,14 @@ class BatchReName {
 		this.btnClearRule := this.gui.AddButton("x+m ys r0.75 vClearRule", "清空规则")
 		this.btnClearRule.OnEvent("Click", (*) => this.ClearRule())
 
-		;* 创建规则ListView
+		; f 创建规则ListView
 		defRuleColumns := ["#", "规则", "说明"]
 		this.lvRule := this.gui.AddListView("x" this.gapX " y+m r8 NoSortHdr Checked Grid Section", defRuleColumns)
 		this.lvRule.SetFont("q5 s9")
 		this.lvRuleColor := LV_Colors(this.lvRule.Hwnd, true)
 
 
-		;* 中部按钮
+		; f 中部按钮
 		this.btnApply := this.gui.AddButton("y+" this.gapY " r0.75 +Disabled", "应用")
 		this.btnApply.OnEvent("Click", (*) => this.ReName())
 
@@ -159,14 +159,14 @@ class BatchReName {
 		this.btnClearFiles := this.gui.AddButton("x+m yp hp", "清空文件列表")
 		this.btnClearFiles.OnEvent("Click", (*) => this.ClearFile())
 
-		;* 创建文件ListView
+		; f 创建文件ListView
 		defFileColumns := ["状态", "名称", "新名称", "路径"]
 		this.lvFile := this.gui.AddListView("r15 Grid xs Checked LV0x4000", defFileColumns)
 		this.lvFile.SetFont("q5 s9")
 		this.lvFileColor := LV_Colors(this.lvFile.Hwnd, true)
 
 
-		;* 状态栏
+		; f 状态栏
 		this.stateBar := this.gui.AddStatusBar()
 
 		; -------------------------
@@ -190,10 +190,10 @@ class BatchReName {
 		this.gui.OnEvent("Close", (*) => this.Close())
 		this.gui.OnEvent("Escape", (*) => this.Close())
 
-		;* 注册窗口热键
+		; f 注册窗口热键
 		HotIfWinActive("ahk_id " this.gui.Hwnd)
 
-		;? 全选列表
+		; ? 全选列表
 		Hotkey("^a", HotKeyCtrlACallback)
 		HotKeyCtrlACallback(HotkeyName) {
 			; 获取焦点控件的句柄
@@ -215,7 +215,7 @@ class BatchReName {
 			}
 		}
 
-		;? 移除选中的文件或规则
+		; ? 移除选中的文件或规则
 		Hotkey("Del", HotKeyDel)
 		HotKeyDel(HotkeyName) {
 			; 获取焦点控件的句柄
@@ -230,7 +230,7 @@ class BatchReName {
 			}
 		}
 
-		;? 保存预设
+		; ? 保存预设
 		Hotkey("^s", HotKeyCtrlSCallback)
 		HotKeyCtrlSCallback(HotkeyName) {
 			if (this.rules.Length) {
@@ -264,7 +264,7 @@ class BatchReName {
 		; 计算视口剩余高度
 		viewHight := wClientH - stateBarHeight
 
-		;* 调整顶部按钮 (通常不需要改动)
+		; f 调整顶部按钮 (通常不需要改动)
 		this.btnAddRule.GetPos(&xBtnAddRule, &yBtnAddRule, &wBtnAddRule, &hBtnAddRule)
 		this.btnAddRule.Move()
 
@@ -277,18 +277,18 @@ class BatchReName {
 		this.listPreset.Move(, yBtnAddRule + (hBtnAddRule - hListPreset) / 2,)
 
 
-		;! 计算除按钮和空白区域尺寸外剩余的尺寸
+		; ? 计算除按钮和空白区域尺寸外剩余的尺寸
 		remainH := viewHight - (hBtnAddRule + wMarginY) * 2 - wMarginY * 3
 
-		;* 计算两个listView分别分配的尺寸
+		; f 计算两个listView分别分配的尺寸
 		LRV_NewHeight := (remainH) * 0.3
 		LFV_NewHeight := remainH - LRV_NewHeight
 
-		;* 调整listRuleView
+		; f 调整listRuleView
 		this.lvRule.GetPos(&xLRV, &yLRV, &wLRV, &hLRV)
 		this.lvRule.Move(, yBtnAddRule + hBtnAddRule + wMarginY, wClientW - wMarginX * 2, LRV_NewHeight)
 
-		;* 调整中间按钮
+		; f 调整中间按钮
 		this.lvRule.GetPos(&xLRV, &yLRV, &wLRV, &hLRV)
 		this.btnApply.GetPos(&xBtnApply, &yBtnApply, &wBtnApply, &hBtnApply)
 
@@ -306,12 +306,12 @@ class BatchReName {
 		this.btnClearFiles.GetPos(&xBtnClearFiles, &yBtnClearFiles, &wBtnClearFiles, &hBtnClearFiles)
 		this.btnClearFiles.Move(wClientW - wMarginX - wBtnClearFiles, middleButtonY)
 
-		;* 调整listFileView
+		; f 调整listFileView
 		this.btnClearFiles.GetPos(&xBtnClearFiles, &yBtnClearFiles, &wBtnClearFiles, &hBtnClearFiles)
 		this.lvFile.GetPos(&xLFV, &yLFV, &wLFV, &hLFV)
 		this.lvFile.Move(, yBtnClearFiles + hBtnClearFiles + wMarginY, wClientW - wMarginX * 2, LFV_NewHeight)
 
-		;* 底部按钮
+		; f 底部按钮
 		this.lvFile.GetPos(&xLFV, &yLFV, &wLFV, &hLFV)
 
 		bottomButtonY := yLFV + hLFV + wMarginY
@@ -356,7 +356,7 @@ class BatchReName {
 		this.UpdateAllListView(true)
 	}
 
-	;* 移除所选规则
+	; f 移除所选规则
 	RemoveSelectedRule(*) {
 		listIndex := this.GetListViewIndexList(this.lvRule, , true)
 		; Console.Debug("获取到的所选项的索引：", listIndex)
@@ -384,7 +384,7 @@ class BatchReName {
 		}
 	}
 
-	;* 上移规则
+	; f 上移规则
 	UpRule(*) {
 		listSelectedIndex := this.GetListViewIndexList(this.lvRule,)
 		listCheckedIndex := this.GetListViewIndexList(this.lvRule, "C")
@@ -421,7 +421,7 @@ class BatchReName {
 		this.UpdateAllListView(true)
 	}
 
-	;* 下移规则
+	; f 下移规则
 	DownRule(*) {
 		listIndex := this.GetListViewIndexList(this.lvRule, , true)
 		listCheckedIndex := this.GetListViewIndexList(this.lvRule, "C")
@@ -490,7 +490,7 @@ class BatchReName {
 		return newList
 	}
 
-	;! 清空规则列表
+	; ? 清空规则列表
 	ClearRule() {
 		if (this.rules.Length > 0) {
 			this.rules.RemoveAt(1, this.rules.Length)
@@ -502,7 +502,7 @@ class BatchReName {
 		this.btnSavePreset.Opt("+Disabled")
 		this.btnSaveAsPreset.Opt("+Disabled")
 	}
-	;* 保存当前预设
+	; f 保存当前预设
 
 	SavePreset() {
 		; 如果当前没有选择规则，则直接调用另存命令
@@ -545,7 +545,7 @@ class BatchReName {
 		this.btnSavePreset.Opt("-Disabled")
 	}
 
-	;* 另存为预设
+	; f 另存为预设
 	SaveAsPreset() {
 		; 至少包含一条规则才可保存
 		if (this.rules.Length < 1) {
@@ -604,7 +604,7 @@ class BatchReName {
 		this.gui.Opt("-OwnDialogs")
 	}
 
-	;* 加载预设名称列表
+	; f 加载预设名称列表
 	ReloadPresetNameList() {
 		newList := this.presetNameList
 		; 重载前先记录当前选择的预设名称
@@ -648,7 +648,7 @@ class BatchReName {
 			return this.listPreset.Text
 		}
 		set {
-			;* 加载预设
+			; f 加载预设
 			if (IsSet(Value) && Value) {
 				; Console.Debug("加载预设：" Value)
 				path := this.presetDir "\" Value ".json"
@@ -658,7 +658,7 @@ class BatchReName {
 
 					/** @type {Map} */
 					jsonMap := JSON.LoadFile(path, "UTF-8")
-					;? `JSON.LoadFile` 和 `JSON..Parse` 解析出来的结果是一个 `Map` 对象
+					; ? `JSON.LoadFile` 和 `JSON..Parse` 解析出来的结果是一个 `Map` 对象
 					; Console.Debug("加载预设 " Type(jsonMap), jsonMap)
 
 					; 加载过滤器
@@ -710,7 +710,7 @@ class BatchReName {
 		}
 	}
 
-	;* 重命名预设
+	; f 重命名预设
 	ReNamePreset() {
 		; 获取预设名称
 		oldName := this.nowPresetName
@@ -774,7 +774,7 @@ class BatchReName {
 		this.nowPresetName := this.listPreset.Text
 	}
 
-	;* 删除预设
+	; f 删除预设
 	DeletePreset() {
 		; Console.Debug("准备删除预设：" this.nowPresetName)
 		; 获取预设名称
@@ -802,7 +802,7 @@ class BatchReName {
 
 	}
 
-	;*更新规则ListView
+	; f更新规则ListView
 	UpdateRuleListView() {
 		this.lvRule.ModifyCol(1, 'AutoHdr')
 		this.lvRule.ModifyCol(2, 'AutoHdr')
@@ -863,7 +863,7 @@ class BatchReName {
 			for path in pathList {
 				file := ReNameFile(path)
 
-				;* 跳过隐藏文件和已存在文件
+				; f 跳过隐藏文件和已存在文件
 				if (file.Attribute ~= "[H]" || this.files.Find((f) => f.Path == file.Path))
 					continue
 
@@ -885,7 +885,7 @@ class BatchReName {
 						loop files file.Path "\*", "F" {
 							subFile := ReNameFile(A_LoopFileFullPath)
 
-							;* 跳过隐藏文件和已存在文件
+							; f 跳过隐藏文件和已存在文件
 							if (subFile.Attribute ~= "[H]" || this.files.Find((f) => f.Path == subFile.Path))
 								continue
 							; 判断是否匹配过滤器
@@ -922,7 +922,7 @@ class BatchReName {
 			loop files pathNowWindow "\*", "F" {
 				file := ReNameFile(A_LoopFileFullPath)
 
-				;* 跳过隐藏文件和已存在文件
+				; f 跳过隐藏文件和已存在文件
 				if (file.Attribute ~= "[H]" || this.files.Find((f) => f.Path == file.Path))
 					continue
 
@@ -973,7 +973,7 @@ class BatchReName {
 		for (path in FileArray) {
 			file := ReNameFile(path)
 
-			;* 跳过隐藏文件和已存在文件
+			; f 跳过隐藏文件和已存在文件
 			if (file.Attribute ~= "[H]" || this.files.Find((f) => f.Path == file.Path))
 				continue
 
@@ -998,7 +998,7 @@ class BatchReName {
 					loop files file.Path "\*", "F" {
 						subFile := ReNameFile(A_LoopFileFullPath)
 
-						;* 跳过隐藏文件和已存在文件
+						; f 跳过隐藏文件和已存在文件
 						if (subFile.Attribute ~= "[H]" || this.files.Find((f) => f.Path == subFile.Path))
 							continue
 
@@ -1030,15 +1030,15 @@ class BatchReName {
 			}
 		}
 
-		;* 按照路径逻辑排序(首次排序)
+		; f 按照路径逻辑排序(首次排序)
 		this.lvFile.ModifyCol(4, 'Logical Sort')
 		this.SortFilesByListFileView()
-		;* 最后刷新ListView 同时重新计算重命名结果
+		; f 最后刷新ListView 同时重新计算重命名结果
 		this.UpdateAllListView(true)
 	}
 
 
-	;* 移除所选文件
+	; f 移除所选文件
 	RemoveSelectedFile(*) {
 		listIndex := this.GetListViewIndexList(this.lvFile, , true)
 
@@ -1061,7 +1061,7 @@ class BatchReName {
 		this.lvFile.Modify(index, "+Check")
 	}
 
-	;! 清空文件列表
+	; ? 清空文件列表
 	ClearFile() {
 		; 先清空files
 		if (this.files.Length > 0) {
@@ -1183,7 +1183,7 @@ class BatchReName {
 		}
 	}
 
-	;! 计算重命名预览结果
+	; ? 计算重命名预览结果
 	CalcRenamePreview() {
 		; 获取已经勾选的规则列表
 		checkedRuleIndexList := this.GetListViewIndexList(this.lvRule, "C")
@@ -1219,7 +1219,7 @@ class BatchReName {
 			ReName.%rule.Type%(this.files, rule)
 		}
 
-		;! 进行冲突检测
+		; ? 进行冲突检测
 		this.CheckConflict()
 
 		; 最后更新视图
@@ -1247,7 +1247,7 @@ class BatchReName {
 			/** @type {ReNameFile} */
 			file := this.files[A_Index]
 
-			;* 如果待修改文件路径不存则跳过
+			; f 如果待修改文件路径不存则跳过
 			if (!file.PathExist) {
 				this.lvFile.Modify(A_Index, , "❓")
 				this.lvFileColor.Cell(A_Index, 3, ,) ; 清除颜色
@@ -1255,7 +1255,7 @@ class BatchReName {
 				continue
 			}
 
-			;* 跳过无需修改的文件
+			; f 跳过无需修改的文件
 			if (file.Path == file.NewPath) {
 				this.lvFile.Modify(A_Index, , "✔")
 				this.lvFileColor.Cell(A_Index, 3, ,) ; 清除颜色
@@ -1263,7 +1263,7 @@ class BatchReName {
 				continue
 			}
 
-			;* 跳过未被勾选（启用）的项目
+			; f 跳过未被勾选（启用）的项目
 			if (!file.Enable) {
 				this.lvFile.Modify(A_Index, , "⏸")
 				this.lvFileColor.Cell(A_Index, 3, ,) ; 清除颜色
@@ -1272,7 +1272,7 @@ class BatchReName {
 			}
 
 
-			;! 判断在修改该项目之前是否会修改其所在目录
+			; ? 判断在修改该项目之前是否会修改其所在目录
 			indexDir := folderItemList.Find(f => InStr(file.Path, f.Path))
 			if (indexDir > 0) {
 				; 如果发现前面记录的文件夹列表中存在当前项目所在目录则标记为冲突
@@ -1284,14 +1284,14 @@ class BatchReName {
 				continue
 			}
 
-			;? 如果当前项目是文件夹则记录下来(留作后续冲突判断)
+			; ? 如果当前项目是文件夹则记录下来(留作后续冲突判断)
 			if (file.IsDirectory) {
 				folderItemList.Push(file)
 			}
 
 
 			; 判断文件是否存在
-			; * file.NewPathExist == true 则说文件存在即冲突
+			; f file.NewPathExist == true 则说文件存在即冲突
 			this.lvFile.Modify(A_Index, , file.NewPathExist ? "❗" : "✔")
 			this.lvFileColor.Cell(A_Index, 3, , file.NewPathExist ? 0xff0000 : 0x009900)
 
@@ -1317,7 +1317,7 @@ class BatchReName {
 		}
 	}
 
-	;! 执行重命名
+	; ? 执行重命名
 	ReName() {
 		; Console.Debug("重命名应用")
 		if (!this.files.Length) {
@@ -1333,21 +1333,21 @@ class BatchReName {
 		for (index, fileItem in this.files) {
 			continueFlag := false
 
-			;* 跳过未被勾选（启用）的项目
+			; f 跳过未被勾选（启用）的项目
 			if (!fileItem.Enable) {
 				UnenableCount++
 				continueFlag := true
 				; continue
 			}
 
-			;* 跳过路径不存在的项
+			; f 跳过路径不存在的项
 			if (!fileItem.PathExist) {
 				notExistCount++
 				continueFlag := true
 				; continue
 			}
 
-			;* 跳过无需重命名的项
+			; f 跳过无需重命名的项
 			if (fileItem.NewName == fileItem.Name) {
 				NoNeedRenameCount++
 				successCount++
@@ -1355,13 +1355,13 @@ class BatchReName {
 				; continue
 			}
 
-			;* 跳过冲突项 NewPathExist==true 说明冲突
+			; f 跳过冲突项 NewPathExist==true 说明冲突
 			if (fileItem.NewPathExist) {
 				continueFlag := true
 				; continue
 			}
 
-			;? 通过 continueFlag 判断是否跳过
+			; ? 通过 continueFlag 判断是否跳过
 			if (continueFlag) {
 				continue
 			}
@@ -1432,7 +1432,7 @@ class BatchReName {
 
 		; 显示窗口
 		if (!this.isShow) {
-			;* 以隐藏方式显示gui窗口
+			; f 以隐藏方式显示gui窗口
 			this.gui.Show("Hide w700")
 			; 显示窗口
 			this.gui.Show("w800")
@@ -1456,22 +1456,22 @@ class BatchReName {
 				this.AddFileToListView(file)
 			}
 
-			;* 按照路径逻辑排序(首次排序)
+			; f 按照路径逻辑排序(首次排序)
 			this.lvFile.ModifyCol(4, 'Logical Sort')
 			; 根据 `ListFileView` 排序 `this.files` 数组
 			this.SortFilesByListFileView()
 
-			;* 刷新ListView 同时重算重命名结果
+			; f 刷新ListView 同时重算重命名结果
 			this.UpdateAllListView(true)
 		}
 
-		;* 更新状态栏
+		; f 更新状态栏
 		this.UpdateStateBar()
 
 		this.isShow := true
 	}
 
-	;* 注册DropFile事件（解决管理员身份运行后无法触发的问题）
+	; f 注册DropFile事件（解决管理员身份运行后无法触发的问题）
 	RegisterDropFileEvent() {
 		WM_DROPFILES := 0x0233
 		WM_COPYDATA := 0x004A
@@ -1508,7 +1508,7 @@ class BatchReName {
 
 }
 
-;! 添加规则or编辑窗口
+; ? 添加规则or编辑窗口
 class UIRuleEdit {
 	/** @type {Gui} */
 	gui := ''
@@ -1550,12 +1550,12 @@ class UIRuleEdit {
 
 		; Console.Debug("准备定义选项卡")
 
-		;* 定义选项卡
+		; f 定义选项卡
 		this.Tabs := this.gui.AddTab3('', this.types)
 
 		this.gui.SetFont("s10")
 
-		;? 插入
+		; ? 插入
 		this.Tabs.UseTab("插入")
 		{
 			insertGroup := this.gui.AddGroupBox("w" this.tabWidth " r12 Section", '配置：')
@@ -1592,7 +1592,7 @@ class UIRuleEdit {
 			this.Ctl_Insert_Position_After_AnchorText.OnEvent("Change", (*) => (this.Ctl_Insert_Position_After.Value := true))
 		}
 
-		;? 替换
+		; ? 替换
 		this.Tabs.UseTab("替换")
 		{
 			this.gui.AddGroupBox("w" this.tabWidth " r12", '配置：')
@@ -1613,7 +1613,7 @@ class UIRuleEdit {
 			this.Ctl_Replace_IgnoreExt.Value := 1
 		}
 
-		;? 移除
+		; ? 移除
 		this.Tabs.UseTab("移除")
 		{
 			this.gui.AddGroupBox("w" this.tabWidth " r12", '配置：')
@@ -1633,7 +1633,7 @@ class UIRuleEdit {
 
 		}
 
-		;? 序列化
+		; ? 序列化
 		this.Tabs.UseTab("序列化")
 		{
 
@@ -1685,7 +1685,7 @@ class UIRuleEdit {
 
 		}
 
-		;? 填充
+		; ? 填充
 		this.Tabs.UseTab("填充")
 		{
 			; this.gui.AddGroupBox("w" this.tabWidth " r12", '')
@@ -1722,7 +1722,7 @@ class UIRuleEdit {
 
 		}
 
-		;? 正则
+		; ? 正则
 		this.Tabs.UseTab("正则")
 		{
 			this.gui.AddGroupBox("w" this.tabWidth " r12 Section", '配置：')
@@ -1737,7 +1737,7 @@ class UIRuleEdit {
 			this.Ctl_Regex_IgnoreExt.Value := 1
 		}
 
-		;? 扩展名
+		; ? 扩展名
 		this.Tabs.UseTab("扩展名")
 		{
 			this.gui.AddGroupBox("w" this.tabWidth " r12 Section", '配置：')
@@ -1748,16 +1748,16 @@ class UIRuleEdit {
 
 		this.Tabs.UseTab()
 
-		;* 底部按钮
+		; f 底部按钮
 		this.btnConfirm := this.gui.AddButton("y+4 +Default", "添加规则")
 		this.btnConfirm.OnEvent("Click", (*) => this.Confirm())
 		this.btnCancel := this.gui.AddButton('x+4', "取消")
 		this.btnCancel.OnEvent("Click", (*) => this.Cancel())
 
-		;* 添加Tab事件
+		; f 添加Tab事件
 		this.Tabs.OnEvent('Change', (CtrlObj, Info) => this.OnTypeChange(CtrlObj, Info))
 
-		;* 添加窗口事件
+		; f 添加窗口事件
 		this.gui.OnEvent('Size', (guiObj, MinMax, wWidth, wHeight) => this.OnWindowResize(guiObj, MinMax, wWidth, wHeight))
 		this.gui.OnEvent("Close", (*) => this.Close())
 		this.gui.OnEvent("Escape", (*) => this.Close())
@@ -1779,7 +1779,7 @@ class UIRuleEdit {
 		wMarginX := this.gui.MarginX
 		wMarginY := this.gui.MarginY
 
-		;* 调整底部按钮
+		; f 调整底部按钮
 		this.btnCancel.GetPos(&bclX, &bclY, &bclW, &bclH)
 		; 底部按钮的统一Y值
 		; bottomButtonY := wClientH - wMarginY - bclH
@@ -1810,7 +1810,7 @@ class UIRuleEdit {
 		; Console.Debug("创建规则:" type, submits)
 
 		rawObj := Map()
-		;* 选出当前规则类型相关的键值对
+		; f 选出当前规则类型相关的键值对
 		for (k, v in submits.OwnProps()) {
 			; 跳过不是Type开头的参数的字段
 			if ( not InStr(k, type)) {
@@ -1823,7 +1823,7 @@ class UIRuleEdit {
 
 		rule := ""
 
-		;* 解析规则
+		; f 解析规则
 		if (type == "Insert") {
 			rule := RenameRule.InsertRule()
 			; 插入内容
@@ -2055,7 +2055,7 @@ class UIRuleEdit {
 		}
 	}
 
-	;! 确认提交规则
+	; ? 确认提交规则
 	Confirm() {
 		rule := this.ParseToRule()
 
@@ -2200,7 +2200,7 @@ class RenameRule {
 		}
 	}
 
-	;! 插入规则
+	; ? 插入规则
 	class InsertRule extends RenameRule.BaseRule {
 		Type := "Insert"
 		; 插入内容
@@ -2280,7 +2280,7 @@ class RenameRule {
 		}
 	}
 
-	;! 替换规则
+	; ? 替换规则
 	class ReplaceRule extends RenameRule.BaseRule {
 		Type := "Replace"
 		/** 需替换的内容 */
@@ -2336,7 +2336,7 @@ class RenameRule {
 		}
 	}
 
-	;! 删除规则
+	; ? 删除规则
 	class RemoveRule extends RenameRule.BaseRule {
 		Type := "Remove"
 		/** 要删除的内容 */
@@ -2389,7 +2389,7 @@ class RenameRule {
 		}
 	}
 
-	;! 序列化规则
+	; ? 序列化规则
 	class SerializeRule extends RenameRule.BaseRule {
 		Type := "Serialize"
 		/** 要插入序列的位置 'Prefix' | 'Suffix' | 'Index' | 'After' | 'Before' | 'Replace' */
@@ -2485,7 +2485,7 @@ class RenameRule {
 		}
 	}
 
-	;! 填充规则
+	; ? 填充规则
 	class FillRule extends RenameRule.BaseRule {
 		Type := "Fill"
 
@@ -2566,7 +2566,7 @@ class RenameRule {
 		}
 	}
 
-	;! 正则规则
+	; ? 正则规则
 	class RegexRule extends RenameRule.BaseRule {
 		Type := "Regex"
 		/** 正则表达式 */
@@ -2613,7 +2613,7 @@ class RenameRule {
 		}
 	}
 
-	;! 扩展名
+	; ? 扩展名
 	class ExtensionRule extends RenameRule.BaseRule {
 		Type := "Extension"
 		/** 新扩展名 (无需添加.符号) */
@@ -2665,14 +2665,14 @@ class ReNameFile {
 		this.Ext := ext
 		this.Drive := drive
 
-		;? 默认让新名称等于旧名称
+		; ? 默认让新名称等于旧名称
 		this.NewName := name
 
-		;? 默认允许被修改
+		; ? 默认允许被修改
 		this.Enable := true
 
 
-		;! 定义自有的动态属性（为了能被.OwnProps()方法枚举到）
+		; ? 定义自有的动态属性（为了能被.OwnProps()方法枚举到）
 
 		; 文件名(不含扩展名)
 		this.DefineProp("NameNoExt", { Get: GetNameNoExt })
@@ -2751,17 +2751,17 @@ class ReNameFile {
 			}
 		}
 
-		;! 备份一份初始数据
+		; ? 备份一份初始数据
 		this.__InitData := ReNameFile.Backup(this)
 	}
 
 
-	;* 初始化信息（将旧名称赋值给新名称）
+	; f 初始化信息（将旧名称赋值给新名称）
 	InitInfo() {
 		this.NewName := this.__InitData.Name
 	}
 
-	;? 重置数据回到最初版本
+	; ? 重置数据回到最初版本
 	Reset() {
 		this.Path := this.__InitData.Path
 		this.Name := this.__InitData.Name
@@ -2830,7 +2830,7 @@ class ReName {
 			}
 
 
-			;? AHK 的switch语句不能使用break跳出，case并不会贯穿
+			; ? AHK 的switch语句不能使用break跳出，case并不会贯穿
 			switch (rule.Position) {
 				case "Prefix":
 					test := content . test
@@ -2992,7 +2992,7 @@ class ReName {
 				test := item.NewName
 			}
 
-			;? AHK 的switch语句不能使用break跳出，case并不会贯穿
+			; ? AHK 的switch语句不能使用break跳出，case并不会贯穿
 			switch (rule.Position) {
 				case "Prefix":
 					test := sequence . test
@@ -3043,7 +3043,7 @@ class ReName {
 				test := item.NewName
 			}
 
-			;* 补零填充和移除补零
+			; f 补零填充和移除补零
 			{
 				if (rule.RemoveZeroPadding) {
 					test := StringUtils.RemoveZeroPadding(test)
@@ -3052,7 +3052,7 @@ class ReName {
 				}
 			}
 
-			;* 文本填充
+			; f 文本填充
 			{
 				test := StringUtils.Padding(test, rule.TextPadding.Character, rule.TextPadding.Length, rule.TextPadding.Direction)
 			}
