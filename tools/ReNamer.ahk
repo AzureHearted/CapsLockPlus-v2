@@ -2804,7 +2804,7 @@ class ReNameFile {
 }
 
 /**
- * ! 重命名器类
+ * ! 重命名类
  */
 class ReName {
 	/**
