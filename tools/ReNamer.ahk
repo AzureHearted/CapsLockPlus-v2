@@ -2242,35 +2242,32 @@ class RenameRule {
 		/** @type {String} 规则描述*/
 		Description {
 			get {
-				desc := ""
-				if (this.Type == "Insert") {
-					desc .= "插入 `"" this.Content "`" "
+				desc .= "插入 `"" this.Content "`" "
 
-					if (this.Position == "Prefix" || this.Position == "Suffix") {
-						direction := this.Position == "Prefix" ? "前" : "后"
-						desc .= "作为" direction "缀"
-					}
+				if (this.Position == "Prefix" || this.Position == "Suffix") {
+					direction := this.Position == "Prefix" ? "前" : "后"
+					desc .= "作为" direction "缀"
+				}
 
-					if (this.Position == "Index") {
-						desc .= "在位置 " this.AnchorIndex " 处"
-						if (this.ReverseIndex) {
-							desc .= "（从右到左）"
-						}
+				if (this.Position == "Index") {
+					desc .= "在位置 " this.AnchorIndex " 处"
+					if (this.ReverseIndex) {
+						desc .= "（从右到左）"
 					}
+				}
 
-					if (this.Position == "Before" || this.Position == "After") {
-						desc .= "在 `"" (this.Position == "Before" ? this.BeforeAnchorText : this.AfterAnchorText) "`""
-						desc .= this.IgnoreCase ? "（不区分大小写）" : ""
-						desc .= this.Position == "Before" ? "之前" : "之后"
-					}
+				if (this.Position == "Before" || this.Position == "After") {
+					desc .= "在 `"" (this.Position == "Before" ? this.BeforeAnchorText : this.AfterAnchorText) "`""
+					desc .= this.IgnoreCase ? "（不区分大小写）" : ""
+					desc .= this.Position == "Before" ? "之前" : "之后"
+				}
 
-					if (this.Position == "Replace") {
-						desc .= "替换当前文件名"
-					}
+				if (this.Position == "Replace") {
+					desc .= "替换当前文件名"
+				}
 
-					if (this.IgnoreExt) {
-						desc .= "（忽略扩展名）"
-					}
+				if (this.IgnoreExt) {
+					desc .= "（忽略扩展名）"
 				}
 				return desc
 			}
@@ -2555,7 +2552,7 @@ class RenameRule {
 							"文本填充，填充内容 `"" this.TextPadding.Character "`" ，长度 " this.TextPadding.Length "，" directionMap.%this.TextPadding.Direction%
 				}
 				; 判断是否忽略扩展名
-				if (this.ignoreExt) {
+				if (this.IgnoreExt) {
 					desc .= "（忽略扩展名）"
 				}
 				return desc
@@ -2823,42 +2820,42 @@ class ReName {
 				continue
 
 			; 拿到文件名(通过IgnoreCase判断是否包含扩展名)
-			test := rule.IgnoreExt ? item.NewNameNoExt : item.NewName
+			text := rule.IgnoreExt ? item.NewNameNoExt : item.NewName
 			; 如果是目录则直接拿到文件名
 			if (item.IsDirectory) {
-				test := item.NewName
+				text := item.NewName
 			}
 
 
 			; ? AHK 的switch语句不能使用break跳出，case并不会贯穿
 			switch (rule.Position) {
 				case "Prefix":
-					test := content . test
+					text := content . text
 				case "Suffix":
-					test := test . content
+					text := text . content
 				case "Index":
-					test := StringUtils.InsertByIndex(test, content, rule.AnchorIndex, rule.ReverseIndex)
+					text := StringUtils.InsertByIndex(text, content, rule.AnchorIndex, rule.ReverseIndex)
 				case "Before":
-					test := StringUtils.InsertByMatch(test, content, rule.BeforeAnchorText, "Before", {
+					text := StringUtils.InsertByMatch(text, content, rule.BeforeAnchorText, "Before", {
 						ignoreCase: rule.IgnoreCase,
 						isExactMatch: rule.IsExactMatch
 					})
 				case "After":
-					test := StringUtils.InsertByMatch(test, content, rule.AfterAnchorText, "After", {
+					text := StringUtils.InsertByMatch(text, content, rule.AfterAnchorText, "After", {
 						ignoreCase: rule.IgnoreCase,
 						isExactMatch: rule.IsExactMatch
 					})
 				case "Replace":
-					test := content
+					text := content
 			}
 
 
 			; 如果是文件最后还要判断是否加上扩展名
 			if (!item.IsDirectory) {
 				; 最后判断是否加上扩展名
-				item.NewName := test . (rule.IgnoreExt ? "." item.Ext : "")
+				item.NewName := text . (rule.IgnoreExt ? "." item.Ext : "")
 			} else {
-				item.NewName := test
+				item.NewName := text
 			}
 		}
 
@@ -2882,13 +2879,13 @@ class ReName {
 				continue
 
 			; 拿到文件名(通过IgnoreCase判断是否包含扩展名)
-			test := rule.IgnoreExt ? item.NewNameNoExt : item.NewName
+			text := rule.IgnoreExt ? item.NewNameNoExt : item.NewName
 			; 如果是目录则直接拿到文件名
 			if (item.IsDirectory) {
-				test := item.NewName
+				text := item.NewName
 			}
 
-			test := StringUtils.Replace(test, match, replaceTo, range, {
+			text := StringUtils.Replace(text, match, replaceTo, range, {
 				ignoreCase: rule.IgnoreCase,
 				IsExactMatch: rule.IsExactMatch
 			})
@@ -2896,9 +2893,9 @@ class ReName {
 			; 如果是文件最后还要判断是否加上扩展名
 			if (!item.IsDirectory) {
 				; 最后判断是否加上扩展名
-				item.NewName := test . (rule.IgnoreExt ? "." item.Ext : "")
+				item.NewName := text . (rule.IgnoreExt ? "." item.Ext : "")
 			} else {
-				item.NewName := test
+				item.NewName := text
 			}
 		}
 
@@ -2921,13 +2918,13 @@ class ReName {
 				continue
 
 			; 拿到文件名(通过IgnoreCase判断是否包含扩展名)
-			test := rule.IgnoreExt ? item.NewNameNoExt : item.NewName
+			text := rule.IgnoreExt ? item.NewNameNoExt : item.NewName
 			; 如果是目录则直接拿到文件名
 			if (item.IsDirectory) {
-				test := item.NewName
+				text := item.NewName
 			}
 
-			test := StringUtils.Remove(test, match, range, {
+			text := StringUtils.Remove(text, match, range, {
 				ignoreCase: rule.IgnoreCase,
 				IsExactMatch: rule.IsExactMatch
 			})
@@ -2935,9 +2932,9 @@ class ReName {
 			; 如果是文件最后还要判断是否加上扩展名
 			if (!item.IsDirectory) {
 				; 最后判断是否加上扩展名
-				item.NewName := test . (rule.IgnoreExt ? "." item.Ext : "")
+				item.NewName := text . (rule.IgnoreExt ? "." item.Ext : "")
 			} else {
-				item.NewName := test
+				item.NewName := text
 			}
 		}
 	}
@@ -2986,40 +2983,40 @@ class ReName {
 			}
 
 			; 拿到文件名(通过IgnoreCase判断是否包含扩展名)
-			test := rule.IgnoreExt ? item.NewNameNoExt : item.NewName
+			text := rule.IgnoreExt ? item.NewNameNoExt : item.NewName
 			; 如果是目录则直接拿到文件名
 			if (item.IsDirectory) {
-				test := item.NewName
+				text := item.NewName
 			}
 
 			; ? AHK 的switch语句不能使用break跳出，case并不会贯穿
 			switch (rule.Position) {
 				case "Prefix":
-					test := sequence . test
+					text := sequence . text
 				case "Suffix":
-					test := test . sequence
+					text := text . sequence
 				case "Index":
-					test := StringUtils.InsertByIndex(test, sequence, rule.AnchorIndex, rule.ReverseIndex)
+					text := StringUtils.InsertByIndex(text, sequence, rule.AnchorIndex, rule.ReverseIndex)
 				case "Before":
-					test := StringUtils.InsertByMatch(test, sequence, rule.BeforeAnchorText, "Before", {
+					text := StringUtils.InsertByMatch(text, sequence, rule.BeforeAnchorText, "Before", {
 						ignoreCase: rule.IgnoreCase,
 						isExactMatch: rule.IsExactMatch
 					})
 				case "After":
-					test := StringUtils.InsertByMatch(test, sequence, rule.AfterAnchorText, "After", {
+					text := StringUtils.InsertByMatch(text, sequence, rule.AfterAnchorText, "After", {
 						ignoreCase: rule.IgnoreCase,
 						isExactMatch: rule.IsExactMatch
 					})
 				case "Replace":
-					test := sequence
+					text := sequence
 			}
 
 			; 如果是文件最后还要判断是否加上扩展名
 			if (!item.IsDirectory) {
 				; 最后判断是否加上扩展名
-				item.NewName := test . (rule.IgnoreExt ? "." item.Ext : "")
+				item.NewName := text . (rule.IgnoreExt ? "." item.Ext : "")
 			} else {
-				item.NewName := test
+				item.NewName := text
 			}
 		}
 	}
@@ -3037,33 +3034,33 @@ class ReName {
 				continue
 
 			; 拿到文件名(通过IgnoreCase判断是否包含扩展名)
-			test := rule.IgnoreExt ? item.NewNameNoExt : item.NewName
+			text := rule.IgnoreExt ? item.NewNameNoExt : item.NewName
 			; 如果是目录则直接拿到文件名
 			if (item.IsDirectory) {
-				test := item.NewName
+				text := item.NewName
 			}
 
 			; f 补零填充和移除补零
 			{
 				if (rule.RemoveZeroPadding) {
-					test := StringUtils.RemoveZeroPadding(test)
+					text := StringUtils.RemoveZeroPadding(text)
 				} else if (rule.ZeroPadding.Enable) {
-					test := StringUtils.ZeroPadding(test, rule.ZeroPadding.Length)
+					text := StringUtils.ZeroPadding(text, rule.ZeroPadding.Length)
 				}
 			}
 
 			; f 文本填充
 			{
-				test := StringUtils.Padding(test, rule.TextPadding.Character, rule.TextPadding.Length, rule.TextPadding.Direction)
+				text := StringUtils.Padding(text, rule.TextPadding.Character, rule.TextPadding.Length, rule.TextPadding.Direction)
 			}
 
 
 			; 如果是文件最后还要判断是否加上扩展名
 			if (!item.IsDirectory) {
 				; 最后判断是否加上扩展名
-				item.NewName := test . (rule.IgnoreExt ? "." item.Ext : "")
+				item.NewName := text . (rule.IgnoreExt ? "." item.Ext : "")
 			} else {
-				item.NewName := test
+				item.NewName := text
 			}
 		}
 	}
@@ -3080,13 +3077,13 @@ class ReName {
 				continue
 
 			; 拿到文件名(通过IgnoreCase判断是否包含扩展名)
-			test := rule.IgnoreExt ? item.NewNameNoExt : item.NewName
+			text := rule.IgnoreExt ? item.NewNameNoExt : item.NewName
 			; 如果是目录则直接拿到文件名
 			if (item.IsDirectory) {
-				test := item.NewName
+				text := item.NewName
 			}
 
-			test := StringUtils.RegexReplace(test, rule.Regex, rule.ReplaceTo, {
+			text := StringUtils.RegexReplace(text, rule.Regex, rule.ReplaceTo, {
 				ignoreCase: rule.IgnoreCase,
 				isExactMatch: rule.IsExactMatch
 			})
@@ -3094,9 +3091,9 @@ class ReName {
 			; 如果是文件最后还要判断是否加上扩展名
 			if (!item.IsDirectory) {
 				; 最后判断是否加上扩展名
-				item.NewName := test . (rule.IgnoreExt ? "." item.Ext : "")
+				item.NewName := text . (rule.IgnoreExt ? "." item.Ext : "")
 			} else {
-				item.NewName := test
+				item.NewName := text
 			}
 		}
 	}
@@ -3113,30 +3110,30 @@ class ReName {
 				continue
 
 			; 拿到文件名(通过IgnoreCase判断是否包含扩展名)
-			test := rule.IgnoreExt ? item.NewNameNoExt : item.NewName
+			text := rule.IgnoreExt ? item.NewNameNoExt : item.NewName
 			; 如果是目录则直接拿到文件名
 			if (item.IsDirectory) {
-				test := item.NewName
+				text := item.NewName
 			}
 
 			; 如果是目录则直接拿到文件名
 			if (item.IsDirectory) {
 				; 对文件夹，直接在目录名后面添加后缀名
-				test .= "." rule.NewExt
+				text .= "." rule.NewExt
 			} else {
 				; 对文件，判断是否忽略扩展名
 				if (rule.ignoreExt) {
 					; 如果忽略拓展名则直接在原扩展名后面拼接新扩展名
-					test .= "." rule.NewExt
+					text .= "." item.Ext "." rule.NewExt
 				} else {
 					; 如果不忽略则替换原本的扩展名
-					SplitPath(test, , , , &nameNoExt)
-					test := nameNoExt "." rule.NewExt
+					SplitPath(text, , , , &nameNoExt)
+					text := nameNoExt "." rule.NewExt
 				}
 			}
 
 
-			item.NewName := test
+			item.NewName := text
 		}
 	}
 }
