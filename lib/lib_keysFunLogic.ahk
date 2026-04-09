@@ -12,7 +12,6 @@ funcLogic_capsSwitch() {
 
 ; f CapsLock 按住逻辑
 funcLogic_capsHold() {
-
 	;* 防止当前线程被其他线程中断, 或使其能够被中断.
 	; Critical "On"
 
@@ -82,20 +81,26 @@ funcLogic_capsHold() {
 	CapsLockHold := false
 }
 
-; f 复制
+/**
+ * 复制
+ * @param showTips 显示提示信息
+ */
 funcLogic_copy(showTips := false) {
-	;* 防止当前线程被其他线程中断, 或使其能够被中断.
-	Critical "On"
+	;* ⚠️ 不要再使用 Critical，会导致剪贴板回调无法抢占执行，从而卡死
 
-	if (WinActive('ahk_class CabinetWClass')) {
-		SendInput('^{Insert}')
-
-	} else {
-		SendInput('^c')
+	if (showTips) {
+		;* 监听剪贴板（必须在复制前注册，避免丢事件）
+		OnClipboardChange(handle)
 	}
+
+	;* 执行复制操作
+	SendInput('^c')
 
 	if (!showTips)
 		return
+
+	;* 等待剪贴板更新，避免部分程序延迟写入导致监听不到
+	ClipWait 0.5
 
 	; 监听剪贴板，进行剪贴板显示
 	OnClipboardChange(handle)
@@ -105,9 +110,17 @@ funcLogic_copy(showTips := false) {
 	; 1 = 剪贴板包含可以用文本形式表示的内容(包括从资源管理器窗口复制的文件).
 	; 2 = 剪贴板包含完全是非文本的内容, 例如图片.
 	handle(DataType) {
-		Critical "On"
+		; ⚠️ 回调中不要使用 Critical，否则容易造成线程阻塞
+
 		try {
-			;* 截取内容的前10个字符作为预览
+			; 非文本内容直接提示
+			if (DataType != 1) {
+				; 使用 SetTimer 延迟执行 UI，避免阻塞剪贴板线程
+				SetTimer(() => ShowToolTips("已复制非文本内容", 1000, 20), -10)
+				return
+			}
+
+			; 截取内容的前15个字符作为预览
 			content := Trim(A_Clipboard)
 			length := StrLen(content)
 			preview := SubStr(content, 1, 15)
@@ -118,13 +131,18 @@ funcLogic_copy(showTips := false) {
 				preview .= '……(等' . diff . '个字符)'
 			}
 			; 超出的长度用……拼接
-			; 显示剪贴的内容
-			ShowToolTips(preview, 1000, 20)
+
+			; ⚠️ UI 操作不要直接执行，改为异步（避免卡死）
+			SetTimer(() => ShowToolTips(preview, 1000, 20), -10)
+
 			; Console.Debug('DataType:' . DataType)
 			; ShowToolTips('复制成功！')
-			OnClipboardChange(handle, 0)
+
 		} catch as e {
 			Console.Debug(e)
+		} finally {
+			; 无论是否异常，都必须解绑监听，避免重复触发或泄漏
+			OnClipboardChange(handle, 0)
 		}
 	}
 
@@ -133,11 +151,13 @@ funcLogic_copy(showTips := false) {
 ; f 复制所选文件路径
 funcLogic_copy_selected_paths() {
 	;* 防止当前线程被其他线程中断, 或使其能够被中断.
-	Critical "On"
+	; Critical "On" ;* ⚠️ 不建议开启，会导致 UI 和剪贴板操作卡顿
+
 	; 获取选中的文件路径
 	paths := GetSelectedExplorerItemsPaths()
 	if (!paths.Length) {
-		ShowToolTips('没有选中文件(文件夹)', , 20)
+		;* ⚠️ UI 操作改为异步，避免阻塞线程
+		SetTimer(() => ShowToolTips('没有选中文件(文件夹)', , 20), -10)
 		return
 	}
 
@@ -160,8 +180,16 @@ funcLogic_copy_selected_paths() {
 	}
 
 	; Console.Debug('获取路径：`n' output)
+
+	;* ⚠️ 写入剪贴板前建议清空，避免某些程序不触发更新
+	A_Clipboard := ''
 	A_Clipboard := output
-	ShowToolTips('获取路径：`n' showInfo, 1500, 20)
+
+	;* ⚠️ 简单兜底，确保剪贴板写入完成（尤其是大量路径时）
+	ClipWait 0.3
+
+	;* ⚠️ UI 操作改为异步，避免潜在卡顿
+	SetTimer(() => ShowToolTips('获取路径：`n' showInfo, 1500, 20), -10)
 }
 
 ; f 粘贴
@@ -294,14 +322,14 @@ funcLogic_winPin() {
 
 ; f 系统音量增加
 funcLogic_volumeUp() {
-	Critical "On"
+	; Critical "On"
 	; Console.Debug("增加音量")
 	SendInput('{Volume_Up}')
 }
 
 ; f 系统音量减少
 funcLogic_volumeDown() {
-	Critical "On"
+	; Critical "On"
 	; Console.Debug("降低音量")
 	SendInput('{Volume_Down}')
 }
