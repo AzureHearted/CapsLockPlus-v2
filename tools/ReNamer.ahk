@@ -24,7 +24,7 @@ StartAlone() {
 		DllCall("User32\SetThreadDpiAwarenessContext", "UInt", -5)
 	} else {
 		; ? 忽略DPI缩放(必须在创建GUI之前调用)
-		DllCall("User32\SetThreadDpiAwarenessContext", "UInt", -1)
+		; DllCall("User32\SetThreadDpiAwarenessContext", "UInt", -1)
 	}
 
 	ReNameUI := BatchReName()

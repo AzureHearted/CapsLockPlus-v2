@@ -36,7 +36,7 @@ if (GetWindowsVersion().Major >= 10) {
 	DllCall("User32\SetThreadDpiAwarenessContext", "UInt", -5)
 } else {
 	; Windows 10 以下效果最佳
-	DllCall("User32\SetThreadDpiAwarenessContext", "UInt", -1)
+	; DllCall("User32\SetThreadDpiAwarenessContext", "UInt", -1)
 }
 
 ; A_MaxHotkeysPerInterval和A_HotkeyInterval变量控制热键激活的速率, 超过此速率将显示警告对话框.
