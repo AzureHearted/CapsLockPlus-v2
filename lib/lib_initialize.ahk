@@ -460,7 +460,7 @@ RegisterCapsLookDefaultHotkeys() {
 		; 获取选中文本
 		text := GetSelText()
 		; 读取ini中记录的Everything路径
-		pathEverythingExe := IniRead('setting.ini', 'Everything', 'path', "C:\Program Files\Everything\Everything.exe")
+		pathEverythingExe := IniRead(SettingIniPath, 'Everything', 'Path', "C:\Program Files\Everything\Everything.exe")
 
 		if (!FileExist(pathEverythingExe)) {
 			; 如果默认Everything路径不存在，则查看进程中是否有Everything进程
@@ -473,7 +473,7 @@ RegisterCapsLookDefaultHotkeys() {
 			; 找到Everything进程后更新Everything进程路径
 			pathEverythingExe := ProcessGetPath('Everything.exe')
 			; 更新配置文件中记录的Everything路径
-			IniWrite(pathEverythingExe, 'setting.ini', 'Everything', 'path')
+			IniWrite(pathEverythingExe, SettingIniPath, 'Everything', 'path')
 		}
 		; 通过命令行调用Everything搜索
 		if (id := WinExist("ahk_exe Everything.exe")) {
@@ -481,6 +481,8 @@ RegisterCapsLookDefaultHotkeys() {
 			ControlSetText(text, "Edit1")
 		} else {
 			Run(pathEverythingExe ' -s "' text '"')
+			; Run('explorer.exe "' pathEverythingExe '" -s "' text '"')
+			; RunUnelevated(pathEverythingExe, ' -s "' text '"')
 			hwnd := WinWait('ahk_class EVERYTHING')
 			WinActivate('ahk_id' hwnd)
 		}
