@@ -80,7 +80,7 @@ class BatchReName {
 		if (IsSet(presetDir))
 			this.presetDir := presetDir
 
-		this.gui := Gui('-DPIScale +Resize +MinSize700x400 ', '批量重命名')
+		this.gui := Gui('-DPIScale +Resize +MinSize720x400 ', '批量重命名')
 
 		/** @type {UIRuleEdit} */
 		this.RuleEdit := UIRuleEdit(this)
@@ -92,7 +92,7 @@ class BatchReName {
 
 		; f 顶部按钮
 		; 新增规则按钮
-		this.btnAddRule := this.gui.AddButton("r0.75 vAddRule Section", "新增")
+		this.btnAddRule := this.gui.AddButton("r1 vAddRule Section", "新增")
 		this.btnAddRule.OnEvent("Click", (*) => this.ShowRuleEdit("create", true))
 		; 删除规则按钮
 		this.btnDeleteRule := this.gui.AddButton("x+m ys hp vDeleteRule", "移除")
@@ -104,22 +104,22 @@ class BatchReName {
 		this.btnDownRule := this.gui.AddButton("x+m ys hp vDownRule", "下移")
 		this.btnDownRule.OnEvent('Click', (*) => this.DownRule())
 		; 预设选项
-		this.gui.AddText("x+m" 4 " yp" 4, "预设：")
-		this.listPreset := this.gui.AddDropDownList("x+m ys")
+		this.gui.AddText("x+m" 4 " yp" 6, "预设：")
+		this.listPreset := this.gui.AddDropDownList("ys")
 		this.listPreset.OnEvent("Change", (ctrlObj, info) => this.OnPresetChange(ctrlObj, info))
 
-		this.btnSavePreset := this.gui.AddButton("x+m ys r0.75 +Disabled", "保存")
+		this.btnSavePreset := this.gui.AddButton("x+m ys r1 +Disabled", "保存")
 		this.btnSavePreset.OnEvent("Click", (*) => this.SavePreset())
-		this.btnSaveAsPreset := this.gui.AddButton("x+m hp +Disabled", "另存为")
+		this.btnSaveAsPreset := this.gui.AddButton("x+m yp hp +Disabled", "另存为")
 		this.btnSaveAsPreset.OnEvent("Click", (*) => this.SaveAsPreset())
-		this.btnReNamePreset := this.gui.AddButton("x+m hp  +Disabled", "重命名")
+		this.btnReNamePreset := this.gui.AddButton("x+m yp hp +Disabled", "重命名")
 		this.btnReNamePreset.OnEvent("Click", (*) => this.ReNamePreset())
-		this.btnDeletePreset := this.gui.AddButton("x+m hp +Disabled", "删除")
+		this.btnDeletePreset := this.gui.AddButton("x+m yp hp +Disabled", "删除")
 		this.btnDeletePreset.OnEvent("Click", (*) => this.DeletePreset())
 
 
 		;清空规则按钮
-		this.btnClearRule := this.gui.AddButton("x+m ys r0.75 vClearRule", "清空规则")
+		this.btnClearRule := this.gui.AddButton("x+m ys hp vClearRule", "清空规则")
 		this.btnClearRule.OnEvent("Click", (*) => this.ClearRule())
 
 		; f 创建规则ListView
@@ -127,19 +127,49 @@ class BatchReName {
 		this.lvRule := this.gui.AddListView("x" this.gapX " y+m r8 NoSortHdr Checked Grid Section", defRuleColumns)
 		this.lvRule.SetFont("q5 s9")
 		this.lvRuleColor := LV_Colors(this.lvRule.Hwnd, true)
+		this.lvRule.OnEvent('ContextMenu', HandleLVRuleContextMenu)
+
+		HandleLVRuleContextMenu(*) {
+			list := this.GetListViewIndexList(this.lvRule, ,)
+			local m := Menu()
+
+			m.Add("添加规则", (*) => (
+				this.ShowRuleEdit('create', true)
+			))
+
+			m.Add("删除", (*) => (
+				this.RemoveSelectedRule()
+			))
+
+			if (this.lvRule.GetCount() > 0)
+				m.Add("清空列表", (*) => this.ClearRule())
+
+			switch (list.Length) {
+				case 0:
+					m.Delete("删除")
+				case 1:
+					m.Insert("删除", "编辑", (ItemName, ItemPos, MenuRef) => (
+						this.OnListRuleViewDoubleClick(list[1])
+					))
+				default:
+			}
+
+			m.Show()
+		}
 
 
 		; f 中部按钮
-		this.btnApply := this.gui.AddButton("y+" this.gapY " r0.75 +Disabled", "应用")
-		this.btnApply.OnEvent("Click", (*) => this.ReName())
+		this.btnApply := this.gui.AddButton("y+" this.gapY " r1 +Disabled", "应用")
+		this.btnApply.OnEvent("Click", (*) => this.ExecuteReName())
 
 		this.btnPreview := this.gui.AddButton("x+m yp hp", "预览")
 		this.btnPreview.OnEvent("Click", (*) => this.UpdateAllListView(true))
 
-		this.textFilter := this.gui.AddText("x+m yp" 3 " hp", "过滤器：")
+		this.textFilter := this.gui.AddText("x+m yp" 6 " hp", "过滤器：")
+
 		this.checkFilterFile := this.gui.AddCheckbox("x+m yp-" 3 " hp", "文件")
 		this.checkFilterFile.Value := 1
-		this.editorFilterFile := this.gui.AddEdit("x+ yp hp", "")
+		this.editorFilterFile := this.gui.AddEdit("x+ yp+3 hp", "")
 		this.editorFilterFile.OnEvent("Focus", (*) => HandleEditorFilterFileFocus())
 		HandleEditorFilterFileFocus(*) {
 			this.editorFilterFile.GetPos(&x, &y, &w, &h)
@@ -148,7 +178,8 @@ class BatchReName {
 		}
 
 		this.checkFilterFolder := this.gui.AddCheckbox("x+m" " yp" " hp", "文件夹")
-		this.editorFilterFolder := this.gui.AddEdit("x+ yp hp", "")
+		this.checkFilterFolder.Value := 1
+		this.editorFilterFolder := this.gui.AddEdit("x+ yp+3 hp", "")
 		this.editorFilterFolder.OnEvent("Focus", (*) => HandleEditorFilterFolderFocus())
 		HandleEditorFilterFolderFocus(*) {
 			this.editorFilterFolder.GetPos(&x, &y, &w, &h)
@@ -156,7 +187,9 @@ class BatchReName {
 			this.editorFilterFolder.OnEvent("LoseFocus", (*) => ToolTip(, , , 2))
 		}
 
-		this.btnClearFiles := this.gui.AddButton("x+m yp hp", "清空文件列表")
+		this.checkIncludeSubdir := this.gui.AddCheckbox("x+m yp hp", "包含子目录")
+
+		this.btnClearFiles := this.gui.AddButton("x+m yp hp", "清空列表")
 		this.btnClearFiles.OnEvent("Click", (*) => this.ClearFile())
 
 		; f 创建文件ListView
@@ -185,6 +218,33 @@ class BatchReName {
 		this.lvFile.OnEvent("ItemCheck", (listObj, index, isChecked) => this.OnListFileViewItemCheck(index, isChecked))
 		this.lvFile.OnEvent("ColClick", (listObj, colIndex) => this.OnListFileViewColClick(colIndex))
 
+		this.lvFile.OnEvent('ContextMenu', HandleLVFileContextMenu)
+
+		HandleLVFileContextMenu(*) {
+			list := this.GetListViewIndexList(this.lvFile, ,)
+			local m := Menu()
+
+			m.Add("删除", (*) => (
+				this.RemoveSelectedFile()
+			))
+
+			if (this.lvFile.GetCount() > 0)
+				m.Add("清空列表", (*) => this.ClearFile())
+
+			switch (list.Length) {
+				case 0:
+					m.Delete("删除")
+				case 1:
+					m.Add("打开所在目录", (*) => (
+						; Run(this.files[1].Dir)
+						Run('explorer.exe /select,"' this.files[1].Path '"')
+					))
+				default:
+			}
+
+			m.Show()
+		}
+
 		; 绑定窗口事件
 		this.gui.OnEvent('Size', (guiObj, MinMax, Width, Height) => this.OnWindowResize(guiObj, MinMax, Width, Height))
 		this.gui.OnEvent("Close", (*) => this.Close())
@@ -192,7 +252,6 @@ class BatchReName {
 
 		; f 注册窗口热键
 		HotIfWinActive("ahk_id " this.gui.Hwnd)
-
 		; ? 全选列表
 		Hotkey("^a", HotKeyCtrlACallback)
 		HotKeyCtrlACallback(HotkeyName) {
@@ -205,6 +264,7 @@ class BatchReName {
 				loop this.lvRule.GetCount() {
 					this.lvRule.Modify(A_Index, "+Select")
 				}
+				return
 			}
 			if (hwnd == this.lvFile.Hwnd) {
 				; 全选文件列表
@@ -212,30 +272,45 @@ class BatchReName {
 				loop this.lvFile.GetCount() {
 					this.lvFile.Modify(A_Index, "+Select")
 				}
+				return
 			}
+
+			; 其他情况默认放行
+			Send(HotkeyName)
 		}
 
 		; ? 移除选中的文件或规则
 		Hotkey("Del", HotKeyDel)
 		HotKeyDel(HotkeyName) {
+			if (HotkeyName != "del" && (HotkeyName != "$s" || !GetKeyState('CapsLock', 'P'))) {
+				Send(HotkeyName)
+				return
+			}
+
 			; 获取焦点控件的句柄
 			hwnd := ControlGetFocus()
 			if (hwnd == this.lvRule.Hwnd) {
 				; 移除选中的规则
 				this.RemoveSelectedRule()
+				return
 			}
 			if (hwnd == this.lvFile.Hwnd) {
 				; 移除选中的文件
 				this.RemoveSelectedFile()
+				return
 			}
 		}
 
 		; ? 保存预设
 		Hotkey("^s", HotKeyCtrlSCallback)
 		HotKeyCtrlSCallback(HotkeyName) {
-			if (this.rules.Length) {
-				this.SaveAsPreset()
+			if (HotkeyName != "^s" && (HotkeyName != "e" || !GetKeyState('CapsLock', 'P'))) {
+				Send(HotkeyName)
+				return
 			}
+
+			this.SaveAsPreset()
+			return
 		}
 
 		HotIf()
@@ -297,17 +372,18 @@ class BatchReName {
 		this.btnApply.Move(, middleButtonY)
 		this.btnPreview.Move(, middleButtonY)
 
-		this.textFilter.Move(, middleButtonY + 3)
+		this.textFilter.Move(, middleButtonY + 6)
 		this.checkFilterFile.Move(, middleButtonY)
 		this.editorFilterFile.Move(, middleButtonY)
 		this.checkFilterFolder.Move(, middleButtonY)
 		this.editorFilterFolder.Move(, middleButtonY)
+		this.checkIncludeSubdir.Move(, middleButtonY)
 
 		this.btnClearFiles.GetPos(&xBtnClearFiles, &yBtnClearFiles, &wBtnClearFiles, &hBtnClearFiles)
 		this.btnClearFiles.Move(wClientW - wMarginX - wBtnClearFiles, middleButtonY)
 
 		; f 调整listFileView
-		this.btnClearFiles.GetPos(&xBtnClearFiles, &yBtnClearFiles, &wBtnClearFiles, &hBtnClearFiles)
+		this.btnApply.GetPos(&xBtnClearFiles, &yBtnClearFiles, &wBtnClearFiles, &hBtnClearFiles)
 		this.lvFile.GetPos(&xLFV, &yLFV, &wLFV, &hLFV)
 		this.lvFile.Move(, yBtnClearFiles + hBtnClearFiles + wMarginY, wClientW - wMarginX * 2, LFV_NewHeight)
 
@@ -501,9 +577,21 @@ class BatchReName {
 		; 禁用 “保存” “另存为” 按钮
 		this.btnSavePreset.Opt("+Disabled")
 		this.btnSaveAsPreset.Opt("+Disabled")
-	}
-	; f 保存当前预设
 
+		; 还原过滤器
+		this.RestoreFilters()
+	}
+
+	; f 还原过滤器
+	RestoreFilters() {
+		this.checkFilterFile.Value := 1
+		this.editorFilterFile.Value := ""
+		this.checkFilterFolder.Value := 1
+		this.editorFilterFolder.Value := ""
+		this.checkIncludeSubdir.Value := 0
+	}
+
+	; f 保存当前预设
 	SavePreset() {
 		; 如果当前没有选择规则，则直接调用另存命令
 		if (!this.nowPresetName) {
@@ -654,8 +742,10 @@ class BatchReName {
 				path := this.presetDir "\" Value ".json"
 				; Console.Debug("预设路径:" path)
 				if (FileExist(path)) {
-					; 加载预设
+					; 清空原有规则
+					this.ClearRule()
 
+					; 加载预设
 					/** @type {Map} */
 					jsonMap := JSON.LoadFile(path, "UTF-8")
 					; ? `JSON.LoadFile` 和 `JSON..Parse` 解析出来的结果是一个 `Map` 对象
@@ -670,8 +760,6 @@ class BatchReName {
 					this.checkFilterFolder.Value := folderFilter.Get("enable", true)
 					this.editorFilterFolder.Value := folderFilter.Get("regex", "")
 
-					; 清空原有规则
-					this.ClearRule()
 					/** @type {Map} */
 					rawRules := jsonMap.Get("rules")
 					; 将原始对象转为Rule对象
@@ -880,7 +968,7 @@ class BatchReName {
 						}
 					}
 					; 判断是否获取文件夹中的文件
-					if (this.checkFilterFile.Value) {
+					if (this.checkFilterFile.Value && this.checkIncludeSubdir.Value) {
 						; 遍历路径下的文件
 						loop files file.Path "\*", "F" {
 							subFile := ReNameFile(A_LoopFileFullPath)
@@ -982,6 +1070,7 @@ class BatchReName {
 				if (this.checkFilterFolder.Value) {
 					; 判断是否匹配过滤器
 					if (this.editorFilterFolder.Value) {
+						; 路径匹配过滤器 → 才记录
 						if (file.Path ~= "i)" this.editorFilterFolder.Value) {
 							this.files.Push(file)
 							this.AddFileToListView(file)
@@ -993,7 +1082,7 @@ class BatchReName {
 				}
 
 				; 判断是否获取文件夹中的文件
-				if (this.checkFilterFile.Value) {
+				if (this.checkFilterFile.Value && this.checkIncludeSubdir.Value) {
 					; 遍历路径下的文件
 					loop files file.Path "\*", "F" {
 						subFile := ReNameFile(A_LoopFileFullPath)
@@ -1042,10 +1131,12 @@ class BatchReName {
 	RemoveSelectedFile(*) {
 		listIndex := this.GetListViewIndexList(this.lvFile, , true)
 
+		this.lvFile.Opt('-Redraw')
 		for (index in listIndex) {
 			this.files.RemoveAt(index)
 			this.lvFile.Delete(index)
 		}
+		this.lvFile.Opt('+Redraw')
 
 		; 更新两个ListView
 		this.UpdateAllListView(true)
@@ -1069,6 +1160,7 @@ class BatchReName {
 		}
 		; 再清空ListView
 		this.lvFile.Delete()
+		this.UpdateFileListView()
 		; 文件清空后就不需要更新ListView了
 		; 但需要更新状态栏
 		this.UpdateStateBar()
@@ -1097,12 +1189,15 @@ class BatchReName {
 		lv.ModifyCol(3, "AutoHdr")
 		lv.ModifyCol(4, "AutoHdr")
 
-		for (indexCol in Array(2, 3)) {
-			; 限制2、3列自动宽度不超过180
-			if (this.GetListViewColumnWidth(lv, indexCol) > 180) {
-				lv.ModifyCol(indexCol, 180)
-			}
+
+		if (this.GetListViewColumnWidth(lv, 2) > 180) {
+			lv.ModifyCol(2, 300)
 		}
+
+		if (this.GetListViewColumnWidth(lv, 3) > 180) {
+			lv.ModifyCol(3, 400)
+		}
+
 		if (sortByPath) {
 			lv.ModifyCol(4, "Logical Sort")
 		}
@@ -1318,7 +1413,7 @@ class BatchReName {
 	}
 
 	; ? 执行重命名
-	ReName() {
+	ExecuteReName() {
 		; Console.Debug("重命名应用")
 		if (!this.files.Length) {
 			MsgBox("没有可重命名文件。", "提示")
