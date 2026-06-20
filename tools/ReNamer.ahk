@@ -5,11 +5,12 @@
 #Include ../lib/StringUtils.ahk
 #Include ../lib/lib_functions.ahk
 #Include ../lib/LV_colors.ahk
+#Include ../lib/FileService.ahk
 
 ; 防止中文被转义
 JSON.EscapeUnicode := false
 
-; 单独使用的时候取消下面这个指数然后再运行或编译
+; 单独使用时，先取消下面这行注释，然后再运行或编译
 ; StartAlone()
 
 StartAlone() {
@@ -236,8 +237,7 @@ class BatchReName {
 					m.Delete("删除")
 				case 1:
 					m.Add("打开所在目录", (*) => (
-						; Run(this.files[1].Dir)
-						Run('explorer.exe /select,"' this.files[1].Path '"')
+						Run('explorer.exe /select,"' this.files[list[1]].Path '"')
 					))
 				default:
 			}
@@ -941,109 +941,36 @@ class BatchReName {
 	 * @returns {Array<ReNameFile>} 
 	 */
 	GetFiles() {
-		/** @type {Array<ReNameFile>} */
-		list := []
-		; 获取选中的项(文件资源管理器中)的路径列表
-		pathList := GetSelectedExplorerItemsPaths()
+		options := FileService.ScanOptions()
 
-		if (pathList.Length > 0) {
-			; 遍历所选文件
-			for path in pathList {
-				file := ReNameFile(path)
+		options.IncludeFiles := this.checkFilterFile.Value
+		options.FileRegex := this.editorFilterFile.Value
+		options.IncludeDirectories := this.checkFilterFolder.Value
+		options.DirectoryRegex := this.editorFilterFolder.Value
+		options.IsRecursive := this.checkIncludeSubdir.Value
+		options.IncludeHiddenOrSystem := 0
 
-				; f 跳过隐藏文件和已存在文件
-				if (file.Attribute ~= "[H]" || this.files.Find((f) => f.Path == file.Path))
-					continue
+		local currentPath := GetActiveExplorerPath()
+		local selectedPaths := GetSelectedExplorerItemsPaths()
 
-				if (file.IsDirectory) {
-					; 判断是否记录文件夹
-					if (this.checkFilterFolder.Value) {
-						; 判断是否匹配过滤器
-						if (this.editorFilterFolder.Value) {
-							if (file.Path ~= "i)" this.editorFilterFolder.Value) {
-								list.Push(file)
-							}
-						} else {
-							list.Push(file)
-						}
-					}
-					; 判断是否获取文件夹中的文件
-					if (this.checkFilterFile.Value && this.checkIncludeSubdir.Value) {
-						; 遍历路径下的文件
-						loop files file.Path "\*", "F" {
-							subFile := ReNameFile(A_LoopFileFullPath)
-
-							; f 跳过隐藏文件和已存在文件
-							if (subFile.Attribute ~= "[H]" || this.files.Find((f) => f.Path == subFile.Path))
-								continue
-							; 判断是否匹配过滤器
-							if (this.editorFilterFile.Value) {
-								if (subFile.Path ~= "i)" this.editorFilterFile.Value) {
-									list.Push(subFile)
-								}
-							} else {
-								list.Push(subFile)
-							}
-						}
-					}
-				} else {
-					if (this.checkFilterFile.Value) {
-						; 判断是否匹配过滤器
-						if (this.editorFilterFile.Value) {
-							if (file.Path ~= "i)" this.editorFilterFile.Value) {
-								list.Push(file)
-							}
-						} else {
-							list.Push(file)
-						}
-					}
-				}
-
-			}
+		newPaths := []
+		if (selectedPaths.Length > 0) {
+			; 获取选中的项(文件资源管理器中)的路径列表然后进行路径扫描
+			newPaths := FileService.ScanPathsAsync(selectedPaths, options)
 		} else {
-			; 获取当前窗口路径
-			pathNowWindow := GetActiveExplorerPath()
-
-			if (pathNowWindow == "")
-				return list
-
-			loop files pathNowWindow "\*", "F" {
-				file := ReNameFile(A_LoopFileFullPath)
-
-				; f 跳过隐藏文件和已存在文件
-				if (file.Attribute ~= "[H]" || this.files.Find((f) => f.Path == file.Path))
-					continue
-
-				if (file.IsDirectory) {
-					; 判断是否记录文件夹
-					if (this.checkFilterFolder.Value) {
-						; 判断是否匹配过滤器
-						if (this.editorFilterFolder.Value) {
-							if (file.Path ~= "i)" this.editorFilterFolder.Value) {
-								list.Push(file)
-							}
-						} else {
-							list.Push(file)
-						}
-					}
-				} else {
-					if (this.checkFilterFile.Value) {
-						; 判断是否匹配过滤器
-						if (this.editorFilterFile.Value) {
-							if (file.Path ~= "i)" this.editorFilterFile.Value) {
-								list.Push(file)
-							}
-						} else {
-							list.Push(file)
-						}
-					}
-				}
-
-
-			}
+			FileService.ScanDirectory(currentPath, newPaths, options)
 		}
 
-		return list
+		files := []
+		for path in newPaths {
+			file := ReNameFile(path)
+			; 跳过已经存在的路径
+			if (this.files.Find((f) => f.Path == file.Path)) {
+				continue
+			}
+			files.Push(file)
+		}
+		return files
 	}
 
 	/**
@@ -1058,65 +985,26 @@ class BatchReName {
 
 		this.lvFile.Opt("-Redraw")
 
-		for (path in FileArray) {
+
+		options := FileService.ScanOptions()
+
+		options.IncludeFiles := this.checkFilterFile.Value
+		options.FileRegex := this.editorFilterFile.Value
+		options.IncludeDirectories := this.checkFilterFolder.Value
+		options.DirectoryRegex := this.editorFilterFolder.Value
+		options.IsRecursive := this.checkIncludeSubdir.Value
+		options.IncludeHiddenOrSystem := 0
+
+		newPaths := FileService.ScanPathsAsync(FileArray, options)
+
+		for (path in newPaths) {
 			file := ReNameFile(path)
-
-			; f 跳过隐藏文件和已存在文件
-			if (file.Attribute ~= "[H]" || this.files.Find((f) => f.Path == file.Path))
+			; 跳过已经存在的路径
+			if (this.files.Find((f) => f.Path == file.Path)) {
 				continue
-
-			if (file.IsDirectory) {
-				; 判断是否记录文件夹
-				if (this.checkFilterFolder.Value) {
-					; 判断是否匹配过滤器
-					if (this.editorFilterFolder.Value) {
-						; 路径匹配过滤器 → 才记录
-						if (file.Path ~= "i)" this.editorFilterFolder.Value) {
-							this.files.Push(file)
-							this.AddFileToListView(file)
-						}
-					} else {
-						this.files.Push(file)
-						this.AddFileToListView(file)
-					}
-				}
-
-				; 判断是否获取文件夹中的文件
-				if (this.checkFilterFile.Value && this.checkIncludeSubdir.Value) {
-					; 遍历路径下的文件
-					loop files file.Path "\*", "F" {
-						subFile := ReNameFile(A_LoopFileFullPath)
-
-						; f 跳过隐藏文件和已存在文件
-						if (subFile.Attribute ~= "[H]" || this.files.Find((f) => f.Path == subFile.Path))
-							continue
-
-						; 判断是否匹配过滤器
-						if (this.editorFilterFile.Value) {
-							if (subFile.Path ~= "i)" this.editorFilterFile.Value) {
-								this.files.Push(subFile)
-								this.AddFileToListView(subFile)
-							}
-						} else {
-							this.files.Push(subFile)
-							this.AddFileToListView(subFile)
-						}
-					}
-				}
-			} else {
-				if (this.checkFilterFile.Value) {
-					; 判断是否匹配过滤器
-					if (this.editorFilterFile.Value) {
-						if (file.Path ~= "i)" this.editorFilterFile.Value) {
-							this.files.Push(file)
-							this.AddFileToListView(file)
-						}
-					} else {
-						this.files.Push(file)
-						this.AddFileToListView(file)
-					}
-				}
 			}
+			this.files.Push(file)
+			this.AddFileToListView(file)
 		}
 
 		; f 按照路径逻辑排序(首次排序)
@@ -1367,8 +1255,14 @@ class BatchReName {
 			}
 
 
+			IsSubPath(child, parent) {
+				parent := RTrim(parent, "\")
+				return SubStr(child, 1, StrLen(parent)) = parent
+					&& SubStr(child, StrLen(parent) + 1, 1) = "\"
+			}
+
 			; ? 判断在修改该项目之前是否会修改其所在目录
-			indexDir := folderItemList.Find(f => InStr(file.Path, f.Path))
+			indexDir := folderItemList.Find(f => IsSubPath(file.Path, f.Path))
 			if (indexDir > 0) {
 				; 如果发现前面记录的文件夹列表中存在当前项目所在目录则标记为冲突
 				this.lvFile.Modify(A_Index, , "❗")
