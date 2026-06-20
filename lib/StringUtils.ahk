@@ -379,4 +379,21 @@ class StringUtils {
 
 		return clean
 	}
+
+	/**
+	 * 将字符串数组拼接成字符串
+	 * @param arr 字符串数组
+	 * @param {String} sep 分隔符
+	 * @returns {String} 
+	 */
+	static JoinToString(arr, sep := "`n") {
+		result := ""
+		for i, v in arr {
+			if (i > 1)
+				result .= sep
+			result .= v
+		}
+		return result
+	}
+
 }
