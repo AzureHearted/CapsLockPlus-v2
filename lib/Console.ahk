@@ -14,7 +14,7 @@ class Console {
 	 */
 	static Log(args*) {
 		for (arg in args) {
-			OutputDebug("[Log] " FormatTime(A_Now, 'yyyy-MM-dd HH:mm:ss') '`n' this._VarToString(arg))
+			OutputDebug("[Log] " FormatTime(A_Now, 'yyyy-MM-dd HH:mm:ss') '`n' this._VarToString(arg) "`n")
 		}
 	}
 
@@ -24,7 +24,7 @@ class Console {
 	 */
 	static Debug(args*) {
 		for (arg in args) {
-			OutputDebug(this._VarToString(arg))
+			OutputDebug(this._VarToString(arg) "`n")
 		}
 	}
 
@@ -33,7 +33,7 @@ class Console {
 	 * @param {Error} e 错误信息对象
 	 */
 	static Error(e) {
-		this.Debug("`n发生错误：" e.File " (" e.Line "行) `n错误原因：" e.What "`n错误信息：" e.Message)
+		this.Debug("发生错误：" e.File " (" e.Line "行) `n错误原因：" e.What "`n错误信息：" e.Message "`n")
 	}
 
 	/**
