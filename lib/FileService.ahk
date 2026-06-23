@@ -2,21 +2,34 @@
 #Include Console.ahk
 #Include JSON.ahk
 #Include StringUtils.ahk
+#Include JSON.ahk
 
+; 文件系统服务
 class FileService {
+	; 扫描配置项
 	class ScanOptions {
+		; 是否深度递归
 		IsRecursive := 0
+		; 包含目录
 		IncludeDirectories := 0
+		; 包含文件夹
 		IncludeFiles := 1
+		; 包含隐藏或系统文件
 		IncludeHiddenOrSystem := 0
+		; 文件过滤的正则表达式
 		FileRegex := ""
+		; 目录过滤的正则表达
 		DirectoryRegex := ""
+		; 进度
 		Progress := ""
 	}
 
-	; =========================
-	; Scan Entry
-	; =========================
+	/**
+	 * 同步方式扫描路径
+	 * @param paths 扫描路径
+	 * @param options 选项
+	 * @returns {Array} 扫描结果
+	 */
 	static ScanPathsAsync(paths, options) {
 		results := []
 		processed := 0
@@ -42,9 +55,12 @@ class FileService {
 	}
 
 
-	; =========================
-	; Directory Scan
-	; =========================
+	/**
+	 * 扫描目录
+	 * @param dir 目录
+	 * @param results 扫描结果 (外部传入)
+	 * @param options 选项
+	 */
 	static ScanDirectory(dir, results, options) {
 		try {
 
@@ -67,9 +83,12 @@ class FileService {
 	}
 
 
-	; =========================
-	; File filter
-	; =========================
+	/**
+	 * 尝试添加文件 (根据选项过滤)
+	 * @param file 文件路径
+	 * @param results 扫描结果 (外部传入)
+	 * @param options 选项
+	 */
 	static TryAddFile(file, results, options) {
 
 		if !options.IncludeFiles
@@ -90,9 +109,12 @@ class FileService {
 	}
 
 
-	; =========================
-	; Directory filter
-	; =========================
+	/**
+	 * 尝试添加文件夹 (根据选项过滤)
+	 * @param dir 文件夹路径
+	 * @param results 扫描结果 (外部传入)
+	 * @param options 选项
+	 */
 	static TryAddDirectory(dir, results, options) {
 
 		if !options.IncludeDirectories
@@ -113,9 +135,11 @@ class FileService {
 	}
 
 
-	; =========================
-	; Hidden/System check
-	; =========================
+	/**
+	 * Hidden/System 检查
+	 * @param path 要检查的路径
+	 * @returns {Integer} 路径是否具有 H 或 S 属性
+	 */
 	static IsHiddenOrSystem(path) {
 		try {
 			attr := FileGetAttrib(path)
@@ -125,10 +149,21 @@ class FileService {
 		}
 	}
 
+	/**
+	 * 判断一个路径是否是目录
+	 * @param path 路径
+	 */
+	static IsDirectory(path) {
+		attrib := DirExist(path)
+		return attrib ~= "[D]"
+	}
 
-	; =========================
-	; Dedup + Sort
-	; =========================
+
+	/**
+	 * 去重 + 排序
+	 * @param arr 要排序的数组
+	 * @returns 排序结果
+	 */
 	static UniqueSort(arr) {
 		_map := Map()
 
@@ -144,6 +179,10 @@ class FileService {
 		return arr
 	}
 
+	/**
+	 * 排序数组 (辅助函数)
+	 * @param arr 数组
+	 */
 	static SortArray(arr) {
 
 		len := arr.Length
@@ -164,9 +203,12 @@ class FileService {
 	}
 
 
-	; =========================
-	; File ops
-	; =========================
+	/**
+	 * 文件移动
+	 * @param source 源路径
+	 * @param target 目标路径
+	 * @returns {Integer} 是否成功
+	 */
 	static MoveFile(source, target) {
 		try {
 			if !FileExist(source)
@@ -183,6 +225,11 @@ class FileService {
 	}
 
 
+	/**
+	 * 文件杀出
+	 * @param path 路径
+	 * @returns {Integer} 是否成功
+	 */
 	static DeleteFile(path) {
 		try {
 			if !FileExist(path)
@@ -196,9 +243,10 @@ class FileService {
 	}
 
 
-	; =========================
-	; Open path
-	; =========================
+	/**
+	 * 打开路径
+	 * @param path 路径
+	 */
 	static OpenPath(path) {
 		if !path
 			return
@@ -206,6 +254,10 @@ class FileService {
 	}
 
 
+	/**
+	 * 在文件资源管理器中定位路径
+	 * @param path 路径
+	 */
 	static OpenAndSelect(path) {
 		if !path
 			return
@@ -213,37 +265,22 @@ class FileService {
 	}
 
 
-	; =========================
-	; JSON save
-	; =========================
-	; static SaveAsJson(filePath, data) {
-	; 	try {
-	; 		SplitPath filePath, , &dir
-	; 		if dir && !DirExist(dir)
-	; 			DirCreate(dir)
-
-	; 		json := Jxon_Dump(data, 2)
-
-	; 		FileDelete filePath
-	; 		FileAppend json, filePath, "UTF-8"
-	; 		return true
-	; 	} catch {
-	; 		return false
-	; 	}
-	; }
-
-
-	; =========================
-	; Text save
-	; =========================
-	static SaveText(filePath, content) {
+	/**
+	 * 保存为 Json 格式
+	 * @param filePath 保存路径
+	 * @param data json 数据
+	 * @returns {Integer} 是否成功
+	 */
+	static SaveAsJson(filePath, data) {
 		try {
-			SplitPath filePath, , &dir
-			if dir && !DirExist(dir)
+			SplitPath(filePath, , &dir)
+			if (dir && !DirExist(dir))
 				DirCreate(dir)
 
-			FileDelete filePath
-			FileAppend content, filePath, "UTF-8"
+			_json := JSON.Stringify(data)
+
+			FileDelete(filePath)
+			FileAppend(_json, filePath, "UTF-8")
 			return true
 		} catch {
 			return false
@@ -251,9 +288,32 @@ class FileService {
 	}
 
 
-	; =========================
-	; Helpers (directory listing)
-	; =========================
+	/**
+	 * 保存文本内容到文件
+	 * @param filePath 保存路径
+	 * @param content 文本内容
+	 * @returns {Integer} 是否成功
+	 */
+	static SaveText(filePath, content) {
+		try {
+			SplitPath(filePath, , &dir)
+			if (dir && !DirExist(dir))
+				DirCreate(dir)
+
+			FileDelete(filePath)
+			FileAppend(content, filePath, "UTF-8")
+			return true
+		} catch {
+			return false
+		}
+	}
+
+
+	/**
+	 * 获取目录下的文件
+	 * @param dir 目录路径
+	 * @returns {Array} 获取结果
+	 */
 	static DirGetFiles(dir) {
 		arr := []
 		Loop Files dir "\*", "F"
@@ -262,6 +322,11 @@ class FileService {
 	}
 
 
+	/**
+	 * 获取目录下的文件夹
+	 * @param dir 目录路径
+	 * @returns {Array} 获取结果
+	 */
 	static DirGetFolders(dir) {
 		arr := []
 		Loop Files dir "\*", "D"

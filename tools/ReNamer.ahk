@@ -941,7 +941,9 @@ class BatchReName {
 	 * @returns {Array<ReNameFile>} 
 	 */
 	GetFiles() {
-		options := FileService.ScanOptions()
+		if (!GetKeyState("F2", "P"))
+			return []
+		local options := FileService.ScanOptions()
 
 		options.IncludeFiles := this.checkFilterFile.Value
 		options.FileRegex := this.editorFilterFile.Value
@@ -953,15 +955,27 @@ class BatchReName {
 		local currentPath := GetActiveExplorerPath()
 		local selectedPaths := GetSelectedExplorerItemsPaths()
 
-		newPaths := []
+		local newPaths := []
 		if (selectedPaths.Length > 0) {
 			; 获取选中的项(文件资源管理器中)的路径列表然后进行路径扫描
-			newPaths := FileService.ScanPathsAsync(selectedPaths, options)
+			for sp in selectedPaths {
+				if (FileService.IsDirectory(sp)) {
+					FileService.ScanDirectory(sp, newPaths, options)
+				} else {
+					FileService.TryAddFile(sp, newPaths, options)
+				}
+			}
+
+			; for sp in selectedPaths {
+			; 	index := newPaths.Find(p => p == sp)
+			; 	if (index > 0)
+			; 		newPaths.Delete(index)
+			; }
 		} else {
 			FileService.ScanDirectory(currentPath, newPaths, options)
 		}
 
-		files := []
+		local files := []
 		for path in newPaths {
 			file := ReNameFile(path)
 			; 跳过已经存在的路径
