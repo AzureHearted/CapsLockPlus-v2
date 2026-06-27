@@ -426,7 +426,7 @@ RegisterCapsLookDefaultHotkeys() {
 	; 用<>包裹选中内容
 	CapsLookPlus.AddHotkey("$,", (k) => funcLogic_doubleChar("<", ">"))
 	; 用《》包裹选中内容
-	CapsLookPlus.AddHotkey("$!,", (k) => funcLogic_doubleChar("《", ">"))
+	CapsLookPlus.AddHotkey("$!,", (k) => funcLogic_doubleChar("《", "》"))
 
 
 	; 将选中的英文转为小写
